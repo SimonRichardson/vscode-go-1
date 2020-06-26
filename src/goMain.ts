@@ -39,7 +39,7 @@ import { playgroundCommand } from './goPlayground';
 import { GoReferencesCodeLensProvider } from './goReferencesCodelens';
 import { GoRunTestCodeLensProvider } from './goRunTestCodelens';
 import { outputChannel, showHideStatus } from './goStatus';
-import { subTestAtCursor, testAtCursor, testCurrentFile, testCurrentPackage, testPrevious, testWorkspace } from './goTest';
+import { subTestAtCursor, testAtCursor, testCurrentFile, testCurrentPackage, testPrevious, testWorkspace, generateCurrentPackage } from './goTest';
 import { getConfiguredTools } from './goTools';
 import { vetCode } from './goVet';
 import {
@@ -333,6 +333,13 @@ export function activate(ctx: vscode.ExtensionContext): void {
 			const goConfig = getGoConfig();
 			const isBenchmark = true;
 			testCurrentFile(goConfig, isBenchmark, args);
+		})
+	);
+
+	ctx.subscriptions.push(
+		vscode.commands.registerCommand('go.generate.package', (args) => {
+			const goConfig = getGoConfig();
+			generateCurrentPackage(goConfig, args);
 		})
 	);
 

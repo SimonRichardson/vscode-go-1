@@ -407,6 +407,47 @@ export async function goTest(testconfig: TestConfig): Promise<boolean> {
 	return testResult;
 }
 
+
+/**
+ * Runs go generate and presents the output in the 'Go' channel.
+ *
+ * @param goConfig Configuration for the Go extension.
+ */
+export function goGenerate(testconfig: TestConfig) : Promise<boolean> {
+	const generateResult = new Promise<boolean>(async (resolve, reject) => {
+		const testTags: string = getTestTags(testconfig.goConfig);
+		const args: Array<string> = ['generate'];
+
+		const testEnvVars = getTestEnvVars(testconfig.goConfig);
+		const goRuntimePath = getBinPath('go');
+
+		if (!goRuntimePath) {
+			vscode.window.showErrorMessage(
+				`Failed to run "go test" as the "go" binary cannot be found in either GOROOT(${getCurrentGoRoot()}) or PATH(${envPath})`
+			);
+			return Promise.resolve();
+		}
+
+		outputChannel.appendLine(['Running tool:', goRuntimePath].join(' '));
+		outputChannel.appendLine('');
+	
+		const tp = cp.spawn(goRuntimePath, args, { env: testEnvVars, cwd: testconfig.dir });
+		const outBuf = new LineBuffer();
+		const errBuf = new LineBuffer();
+
+		tp.stdout.on('data', (chunk) => outBuf.append(chunk.toString()));
+		tp.stderr.on('data', (chunk) => errBuf.append(chunk.toString()));
+
+		tp.on('close', (code, signal) => {
+			outBuf.done();
+			errBuf.done();
+
+			resolve(code === 0);
+		});
+	});
+	return generateResult;
+}
+
 /**
  * Reveals the output channel in the UI.
  */

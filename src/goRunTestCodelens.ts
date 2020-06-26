@@ -14,6 +14,7 @@ import { getGoConfig } from './util';
 
 export class GoRunTestCodeLensProvider extends GoBaseCodeLensProvider {
 	private readonly benchmarkRegex = /^Benchmark.+/;
+	private readonly gogenerateRegex = /go\:generate\s+/;
 
 	public async provideCodeLenses(document: TextDocument, token: CancellationToken): Promise<CodeLens[]> {
 		if (!this.enabled) {
@@ -67,6 +68,19 @@ export class GoRunTestCodeLensProvider extends GoBaseCodeLensProvider {
 				new CodeLens(range, {
 					title: 'run file benchmarks',
 					command: 'go.benchmark.file'
+				})
+			);
+		}
+		// TODO : Workout when you see //go:generate
+		if (
+			pkg.children.some(
+				(sym) => this.gogenerateRegex.test(sym.name)
+			)
+		) {
+			packageCodeLens.push(
+				new CodeLens(range, {
+					title: 'run go generate',
+					command: 'go.generate.package',
 				})
 			);
 		}

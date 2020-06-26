@@ -16,6 +16,7 @@ import {
 	getTestFunctions,
 	getTestTags,
 	goTest,
+	goGenerate,
 	TestConfig
 } from './testUtils';
 
@@ -307,6 +308,41 @@ export async function testCurrentFile(
 				lastTestConfig = testConfig;
 				return goTest(testConfig);
 			});
+		})
+		.then(null, (err) => {
+			console.error(err);
+			return Promise.resolve(false);
+		});
+}
+
+/**
+ * Runs go generate in the current package
+ * 
+ * @param goConfig Configuration for the Go extension.
+ */
+export async function generateCurrentPackage(
+	goConfig: vscode.WorkspaceConfiguration,
+	args: string[]
+): Promise<boolean> {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) {
+		vscode.window.showInformationMessage('No editor is active.');
+		return;
+	}
+
+	const isMod = await isModSupported(editor.document.uri);
+
+	return editor.document
+		.save()
+		.then(() => {
+			const testConfig: TestConfig = {
+				goConfig,
+				dir: path.dirname(editor.document.fileName),
+				flags: getTestFlags(goConfig, args),
+				isMod
+			};
+
+			return goGenerate(goConfig);
 		})
 		.then(null, (err) => {
 			console.error(err);
